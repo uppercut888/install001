@@ -2,8 +2,8 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
 */
-import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
-import { RagStore, Document, QueryResult, CustomMetadata } from '../types';
+import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
+import { QueryResult } from '../types';
 
 let ai: GoogleGenAI;
 
@@ -57,7 +57,7 @@ export async function fileSearch(ragStoreName: string, query: string): Promise<Q
 
     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
     return {
-        text: response.text,
+        text: response.text || '',
         groundingChunks: groundingChunks,
     };
 }
@@ -79,7 +79,7 @@ export async function generateExampleQuestions(ragStoreName: string): Promise<st
             }
         });
         
-        let jsonText = response.text.trim();
+        let jsonText = (response.text || '').trim();
 
         const jsonMatch = jsonText.match(/```json\n([\s\S]*?)\n```/);
         if (jsonMatch && jsonMatch[1]) {
@@ -92,6 +92,10 @@ export async function generateExampleQuestions(ragStoreName: string): Promise<st
             }
         }
         
+        if (!jsonText) {
+            return [];
+        }
+
         const parsedData = JSON.parse(jsonText);
         
         if (Array.isArray(parsedData)) {
